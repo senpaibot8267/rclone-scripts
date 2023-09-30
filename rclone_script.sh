@@ -65,6 +65,12 @@ generate_mount_commands() {
 # Generate mount commands for the base directory and its subdirectories
 generate_mount_commands "$BASE_MOUNT_PATH" ""
 
+# Add infinite loop to keep the script running
+echo "# Run an infinite loop in the background to keep the script running" >> "$GENERATED_SCRIPT"
+echo "while :; do" >> "$GENERATED_SCRIPT"
+echo "    sleep 1" >> "$GENERATED_SCRIPT"
+echo "done" >> "$GENERATED_SCRIPT"
+
 # Make the generated script executable
 chmod +x "$GENERATED_SCRIPT"
 
