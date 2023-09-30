@@ -12,6 +12,8 @@ Before using this script, ensure the following prerequisites are met:
 
 2. **rclone Installation:** Ensure that rclone is installed on your system. You can download and install it from the [official website](https://rclone.org/downloads/).
 
+3. **MergerFS Installation:** You also need to have MergerFS installed on your system. You can find installation instructions for MergerFS in the [MergerFS GitHub repository](https://github.com/trapexit/mergerfs).
+
 ## Warning
 
 **Important:** This script does notsss create remote directories. You must ensure that the remote directories you intend to mount using this script already exist in your storage. The script assumes that the remote directories are preconfigured in your `rclone.conf` file and the empty mount directories are already present.
@@ -25,6 +27,7 @@ Before using this script, ensure the following prerequisites are met:
    - `RCLONE_MOUNT_OPTIONS`: Set your desired rclone mount options, such as caching and permissions.
    - `RCLONE_CONF`: Specify the path to your `rclone.conf` file.
    - `BASE_MOUNT_PATH`: Define the base directory where remote directories will be mounted.
+   - `BASE_MERGE_PATH`: Define the base directory where MergerFS will merge the mounted directories.
    - `GENERATED_SCRIPT`: Choose a name for the generated script file.
 
 3. Save the script after making the necessary changes.
@@ -40,7 +43,7 @@ Before using this script, ensure the following prerequisites are met:
    ./rclone_script.sh
 
 
-The script will generate a new script file with mount commands for each remote directory defined in your rclone.conf. These commands will mount the remote directories to the specified BASE_MOUNT_PATH.
+The script will generate a new script file with mount commands for each remote directory defined in your rclone.conf. These commands will mount the remote directories to the specified BASE_MOUNT_PATH and then merge them using MergerFS into the BASE_MERGE_PATH.
 
 Execute the generated script to mount the remote directories.
 

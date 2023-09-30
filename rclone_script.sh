@@ -9,6 +9,12 @@ RCLONE_CONF="/path/to/rclone.conf"
 # Base path to mount
 BASE_MOUNT_PATH="/path/to/basemount"
 
+# Base path to Merge
+BASE_MERGE_PATH="/path/to/basemerge"
+
+# Define common MergerFS options
+MERGERFS_OPTIONS="-o async_read=true,use_ino,allow_other,auto_cache,func.getattr=newest,cache.files=off,dropcacheonclose=true,category.create=mfs"
+
 # Name of the generated script
 GENERATED_SCRIPT="rclone_mount.sh"
 
@@ -30,6 +36,11 @@ echo "# Common rclone mount options" >> "$GENERATED_SCRIPT"
 echo "RCLONE_MOUNT_OPTIONS=\"$RCLONE_MOUNT_OPTIONS\"" >> "$GENERATED_SCRIPT"
 echo >> "$GENERATED_SCRIPT"
 
+# Add common MergerFS options to the generated script
+echo "# Common MergerFS options" >> "$GENERATED_SCRIPT"
+echo "MERGERFS_OPTIONS=\"$MERGERFS_OPTIONS\"" >> "$GENERATED_SCRIPT"
+echo >> "$GENERATED_SCRIPT"
+
 # Parse rclone.conf and store remote names in an array
 remote_names=()
 while IFS= read -r line; do
@@ -40,8 +51,8 @@ while IFS= read -r line; do
     fi
 done < "$RCLONE_CONF"
 
-# Function to generate mount commands for a directory
-generate_mount_commands() {
+# Function to generate rclone mount commands for a directory
+generate_rclone_mount_commands() {
     local dir="$1"
     local sub_path="$2"
 
@@ -57,13 +68,46 @@ generate_mount_commands() {
             fi
 
             # Recursively process subdirectories
-            generate_mount_commands "$sub_dir" "$sub_path$folder_name/"
+            generate_rclone_mount_commands "$sub_dir" "$sub_path$folder_name/"
         fi
     done
 }
 
-# Generate mount commands for the base directory and its subdirectories
-generate_mount_commands "$BASE_MOUNT_PATH" ""
+# Function to generate mergerfs merge commands for a directory
+generate_mergerfs_merge_commands() {
+    local dir="$1"
+    local sub_path="$2"
+    local sub_dirs=()
+
+    for sub_dir in "$dir"/*; do
+        if [ -d "$sub_dir" ]; then
+            folder_name=$(basename "$sub_dir")
+
+            # Check if the subdirectory has a matching remote name in rclone.conf
+            if [[ " ${remote_names[@]} " =~ " $folder_name " ]]; then
+                sub_dirs+=("${BASE_MOUNT_PATH}/${sub_path}${folder_name}")
+                fsname=$(basename "$dir")
+            fi
+
+            # Recursively process subdirectories
+            generate_mergerfs_merge_commands "$sub_dir" "$sub_path$folder_name/"
+        fi
+    done
+
+    # If there are matching subdirectories, create a mergerfs merge
+    if [ ${#sub_dirs[@]} -gt 0 ]; then
+        mergerfs_sources=$(IFS=: ; echo "${sub_dirs[*]}")
+        echo "# Merge $fsname directory" >> "$GENERATED_SCRIPT"
+        echo "sudo mergerfs \$MERGERFS_OPTIONS -o fsname=Jelly$fsname $mergerfs_sources ${BASE_MERGE_PATH}/$fsname &" >> "$GENERATED_SCRIPT"
+        echo >> "$GENERATED_SCRIPT"
+    fi
+}
+
+# Generate rclone mount commands for the base directory and its subdirectories
+generate_rclone_mount_commands "$BASE_MOUNT_PATH" ""
+
+# Generate mergerfs merge commands for the base directory and its subdirectories
+generate_mergerfs_merge_commands "$BASE_MOUNT_PATH" ""
 
 # Add infinite loop to keep the script running
 echo "# Run an infinite loop in the background to keep the script running" >> "$GENERATED_SCRIPT"
