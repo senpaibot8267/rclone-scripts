@@ -7,10 +7,10 @@ RCLONE_MOUNT_OPTIONS="--vfs-cache-mode full --allow-other --allow-non-empty"
 RCLONE_CONF="/home/senpai/test/rclone.conf"
 
 # Base path to mount
-BASE_MOUNT_PATH="/home/senpai/Cloud/"
+BASE_MOUNT_PATH="/home/senpai/Cloud"
 
 # Base path to MergerFS
-BASE_MERGE_PATH="/home/senpai/Media/"
+BASE_MERGE_PATH="/home/senpai/JellyCloud"
 
 # Name of the generated script
 GENERATED_SCRIPT="rclone_mount.sh"
